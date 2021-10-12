@@ -16,7 +16,7 @@
 package octopus.teamcity.server.connection;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -31,7 +31,7 @@ import jetbrains.buildServer.users.User;
 
 public class ConnectionHelper {
 
-  public static List<OAuthConnectionDescriptor> getAvailableOctopusConnections(
+  public static Map<String, OAuthConnectionDescriptor> getAvailableOctopusConnections(
       final OAuthConnectionsManager oauthConnectionManager,
       final ProjectManager projectManager,
       final User user) {
@@ -39,12 +39,12 @@ public class ConnectionHelper {
         .filter(p -> user.isPermissionGrantedForProject(p.getProjectId(), Permission.VIEW_PROJECT))
         .map(p -> oauthConnectionManager.getAvailableConnectionsOfType(p, OctopusConnection.TYPE))
         .flatMap(Collection::stream)
-        .filter(distinctByKey(OAuthConnectionDescriptor::getId))
-        .collect(Collectors.toList());
+        .filter(distinctByField(OAuthConnectionDescriptor::getId))
+        .collect(Collectors.toMap(OAuthConnectionDescriptor::getId, Function.identity()));
   }
 
-  private static <T> Predicate<T> distinctByKey(final Function<? super T, ?> keyExtractor) {
-    Set<Object> seen = ConcurrentHashMap.newKeySet();
+  private static <T> Predicate<T> distinctByField(final Function<? super T, ?> keyExtractor) {
+    final Set<Object> seen = ConcurrentHashMap.newKeySet();
     return t -> seen.add(keyExtractor.apply(t));
   }
 }

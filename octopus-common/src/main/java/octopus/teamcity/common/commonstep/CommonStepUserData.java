@@ -21,7 +21,7 @@ import java.util.Optional;
 import octopus.teamcity.common.BaseUserData;
 
 /**
- * Assumes that the params passed in are correctly formatted and can be immediate converted to the
+ * Assumes that the params passed in are correctly formatted and can be immediately converted to the
  * appropriate types (URL/Boolean), as the map was verified as part of the TeamCity
  * PropertiesValidator
  */
@@ -35,6 +35,10 @@ public class CommonStepUserData extends BaseUserData {
 
   public String getStepType() {
     return fetchRaw(KEYS.getStepTypePropertyName());
+  }
+
+  public String getConnectionId() {
+    return params.get(KEYS.getConnectionIdPropertyName());
   }
 
   public Optional<String> getSpaceName() {
