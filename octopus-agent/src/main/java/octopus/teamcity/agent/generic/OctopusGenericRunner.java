@@ -22,6 +22,8 @@ import com.octopus.sdk.http.ConnectData;
 import com.octopus.sdk.http.OctopusClient;
 import com.octopus.sdk.http.OctopusClientFactory;
 import com.octopus.sdk.operation.buildinformation.BuildInformationUploader;
+import com.octopus.sdk.operation.executionapi.CreateRelease;
+import com.octopus.sdk.operation.executionapi.ExecuteRunbook;
 import com.octopus.sdk.operation.pushpackage.PushPackageUploader;
 
 import java.net.MalformedURLException;
@@ -41,6 +43,7 @@ import octopus.teamcity.agent.createrelease.OctopusCreateReleaseBuildProcess;
 import octopus.teamcity.agent.pushpackage.FileSelector;
 import octopus.teamcity.agent.pushpackage.OctopusPushPackageBuildProcess;
 import octopus.teamcity.agent.runbookrun.OctopusRunbookRunBuildProcess;
+import octopus.teamcity.agent.runbookrun.TaskWaiter;
 import octopus.teamcity.common.OctopusConstants;
 import octopus.teamcity.common.commonstep.CommonStepUserData;
 import octopus.teamcity.common.connection.ConnectionUserData;
@@ -111,9 +114,10 @@ public class OctopusGenericRunner implements AgentBuildRunner {
         final FileSelector fileSelector = new FileSelector(context.getWorkingDirectory().toPath());
         return new OctopusPushPackageBuildProcess(pushPackageUploader, fileSelector, context);
       case ("create-release"):
-        return new OctopusCreateReleaseBuildProcess(context);
+        return new OctopusCreateReleaseBuildProcess(context, new CreateRelease(client));
       case ("runbook-run"):
-        return new OctopusRunbookRunBuildProcess(context);
+        return new OctopusRunbookRunBuildProcess(
+            context, new ExecuteRunbook(client), new TaskWaiter(client));
       default:
         throw new RunBuildException("Unknown build step type " + stepType);
     }
