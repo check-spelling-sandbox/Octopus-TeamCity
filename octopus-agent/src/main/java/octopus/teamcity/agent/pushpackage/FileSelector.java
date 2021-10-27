@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,7 +45,7 @@ public class FileSelector {
     final Set<File> result = new HashSet<>();
     globs.forEach(
         entry -> {
-          final Path fullPath = rootPath.resolve(entry);
+          final String fullPath = appendGlobToPath(rootPath, entry);
           final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + fullPath);
           try {
             Files.walkFileTree(
@@ -65,5 +66,14 @@ public class FileSelector {
           }
         });
     return result;
+  }
+
+  // Note on windows, cannot use globs when using Path.resolve (as * is an illegal character)
+  // this _should_ also be valid on linux, but it's slighly nasty
+  public static String appendGlobToPath(final Path rootPath, final String glob) {
+
+    final String systemSpecificGlob = FilenameUtils.separatorsToSystem(glob);
+    final String fullyPathedGlob = rootPath.toAbsolutePath() + File.separator + systemSpecificGlob;
+    return FilenameUtils.separatorsToSystem(fullyPathedGlob);
   }
 }
