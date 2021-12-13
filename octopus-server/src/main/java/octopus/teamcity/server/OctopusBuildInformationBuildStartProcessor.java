@@ -12,6 +12,7 @@ import jetbrains.buildServer.serverSide.SRunningBuild;
 import jetbrains.buildServer.serverSide.oauth.OAuthConnectionDescriptor;
 import jetbrains.buildServer.serverSide.oauth.OAuthConnectionsManager;
 import jetbrains.buildServer.users.SUser;
+import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.VcsRootInstanceEntry;
 import octopus.teamcity.common.commonstep.CommonStepPropertyNames;
 import octopus.teamcity.server.connection.ConnectionHelper;
@@ -52,7 +53,10 @@ public class OctopusBuildInformationBuildStartProcessor implements BuildStartCon
       }
     }
 
-    insertConnectionPropertiesIntoOctopusBuildSteps(buildStartContext);
+    final String enableStepVnext = System.getProperty("octopus.enable.step.vnext");
+    if (!StringUtil.isEmpty(enableStepVnext) && Boolean.parseBoolean(enableStepVnext)) {
+      insertConnectionPropertiesIntoOctopusBuildSteps(buildStartContext);
+    }
   }
 
   private void insertConnectionPropertiesIntoOctopusBuildSteps(
