@@ -1,35 +1,33 @@
 package octopus.teamcity.server;
 
 import java.util.List;
-import java.util.Map;
 
+import com.intellij.openapi.diagnostic.Logger;
 import jetbrains.buildServer.ExtensionHolder;
+import jetbrains.buildServer.log.Loggers;
 import jetbrains.buildServer.serverSide.BuildStartContext;
 import jetbrains.buildServer.serverSide.BuildStartContextProcessor;
-import jetbrains.buildServer.serverSide.ProjectManager;
+import jetbrains.buildServer.serverSide.SBuildType;
+import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.SRunnerContext;
 import jetbrains.buildServer.serverSide.SRunningBuild;
 import jetbrains.buildServer.serverSide.oauth.OAuthConnectionDescriptor;
 import jetbrains.buildServer.serverSide.oauth.OAuthConnectionsManager;
-import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.VcsRootInstanceEntry;
 import octopus.teamcity.common.commonstep.CommonStepPropertyNames;
-import octopus.teamcity.server.connection.ConnectionHelper;
 
 public class OctopusBuildInformationBuildStartProcessor implements BuildStartContextProcessor {
 
   private final ExtensionHolder extensionHolder;
   private final OAuthConnectionsManager oAuthConnectionsManager;
-  private final ProjectManager projectManager;
+  private final Logger logger = Loggers.SERVER;
 
   public OctopusBuildInformationBuildStartProcessor(
       final ExtensionHolder extensionHolder,
-      final OAuthConnectionsManager oAuthConnectionsManager,
-      final ProjectManager projectManager) {
+      final OAuthConnectionsManager oAuthConnectionsManager) {
     this.extensionHolder = extensionHolder;
     this.oAuthConnectionsManager = oAuthConnectionsManager;
-    this.projectManager = projectManager;
   }
 
   @Override
@@ -61,26 +59,35 @@ public class OctopusBuildInformationBuildStartProcessor implements BuildStartCon
 
   private void insertConnectionPropertiesIntoOctopusBuildSteps(
       final BuildStartContext buildStartContext) {
-    final SUser user = buildStartContext.getBuild().getTriggeredBy().getUser();
-    final Map<String, OAuthConnectionDescriptor> allConnections =
-        ConnectionHelper.getAvailableOctopusConnections(
-            oAuthConnectionsManager, projectManager, user);
+    final SBuildType buildType = buildStartContext.getBuild().getBuildType();
+    if (buildType == null) {
+      logger.error(
+          "Unable to find the buildType, connection data not included in buildStartContext");
+      return;
+    }
+
+    final SProject project = buildStartContext.getBuild().getBuildType().getProject();
 
     // For each OctopusGenericBuildStep in the build, find the referenced connection, and copy
     // parameters into the runnerParams
     buildStartContext.getRunnerContexts().stream()
         .filter(rc -> rc.getRunType() instanceof OctopusGenericRunType)
-        .forEach(context -> updateBuildStepWithConnectionProperties(allConnections, context));
+        .forEach(context -> updateBuildStepWithConnectionProperties(project, context));
   }
 
   private void updateBuildStepWithConnectionProperties(
-      final Map<String, OAuthConnectionDescriptor> allConnections, final SRunnerContext context) {
+      final SProject project, final SRunnerContext context) {
     final String connectionId = context.getParameters().get(CommonStepPropertyNames.CONNECTION_ID);
-    if (!allConnections.containsKey(connectionId)) {
+
+    final OAuthConnectionDescriptor connection =
+        oAuthConnectionsManager.findConnectionById(project, connectionId);
+
+    if (connection == null) {
       throw new IllegalArgumentException(
           "No Octopus connection '" + connectionId + "' exists for the current " + "project");
     }
-    allConnections.get(connectionId).getParameters().forEach(context::addRunnerParameter);
+
+    connection.getParameters().forEach(context::addRunnerParameter);
   }
 
   public void register() {

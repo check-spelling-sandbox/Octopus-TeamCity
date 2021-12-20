@@ -17,14 +17,12 @@ package octopus.teamcity.server.generic;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.controllers.admin.projects.RunnerPropertiesBean;
-import jetbrains.buildServer.serverSide.ProjectManager;
+import jetbrains.buildServer.serverSide.impl.auth.SecuredProject;
 import jetbrains.buildServer.serverSide.oauth.OAuthConnectionDescriptor;
 import jetbrains.buildServer.serverSide.oauth.OAuthConnectionsManager;
 import jetbrains.buildServer.users.User;
@@ -33,7 +31,6 @@ import jetbrains.buildServer.web.openapi.WebControllerManager;
 import jetbrains.buildServer.web.util.SessionUser;
 import octopus.teamcity.common.commonstep.CommonStepPropertyNames;
 import octopus.teamcity.server.OctopusGenericRunType;
-import octopus.teamcity.server.connection.ConnectionHelper;
 import org.springframework.web.servlet.ModelAndView;
 
 // This is responsible for handling the call http request for the OctopusBuildStep.
@@ -41,17 +38,14 @@ public class OctopusViewGenericRunTypeController extends BaseController {
 
   private final PluginDescriptor pluginDescriptor;
   private final OAuthConnectionsManager oauthConnectionManager;
-  private final ProjectManager projectManager;
 
   public OctopusViewGenericRunTypeController(
       final WebControllerManager webControllerManager,
       final PluginDescriptor pluginDescriptor,
       final OctopusGenericRunType octopusGenericRunType,
-      final OAuthConnectionsManager oauthConnectionManager,
-      final ProjectManager projectManager) {
+      final OAuthConnectionsManager oauthConnectionManager) {
     this.pluginDescriptor = pluginDescriptor;
     this.oauthConnectionManager = oauthConnectionManager;
-    this.projectManager = projectManager;
 
     webControllerManager.registerController(
         octopusGenericRunType.getViewRunnerParamsJspFilePath(), this);
@@ -71,19 +65,21 @@ public class OctopusViewGenericRunTypeController extends BaseController {
       return null;
     }
 
-    final Map<String, OAuthConnectionDescriptor> availableConnections =
-        ConnectionHelper.getAvailableOctopusConnections(
-            oauthConnectionManager, projectManager, user);
+    // "contextProject" is a bit magic, unable to find docs to justify its existence
+    final SecuredProject project = (SecuredProject) request.getAttribute("contextProject");
+    if (project != null) {
+      final RunnerPropertiesBean propertiesBean =
+          (RunnerPropertiesBean) request.getAttribute("propertiesBean");
+      final String connectionId =
+          propertiesBean.getProperties().get(CommonStepPropertyNames.CONNECTION_ID);
 
-    final RunnerPropertiesBean propertiesBean =
-        (RunnerPropertiesBean) request.getAttribute("propertiesBean");
-    final String connectionId =
-        propertiesBean.getProperties().get(CommonStepPropertyNames.CONNECTION_ID);
-    final Optional<OAuthConnectionDescriptor> connection =
-        Optional.ofNullable(availableConnections.get(connectionId));
-
-    if (connection.isPresent()) {
-      propertiesBean.getProperties().putAll(connection.get().getParameters());
+      final OAuthConnectionDescriptor connection =
+          oauthConnectionManager.findConnectionById(project, connectionId);
+      if (connection != null) {
+        propertiesBean.getProperties().putAll(connection.getParameters());
+      } else {
+        logger.warn("Unable to find connection with Id " + connectionId);
+      }
     }
 
     return modelAndView;

@@ -18,12 +18,14 @@ package octopus.teamcity.server.generic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.RelativeWebLinks;
+import jetbrains.buildServer.serverSide.impl.auth.SecuredProject;
 import jetbrains.buildServer.serverSide.oauth.OAuthConnectionDescriptor;
 import jetbrains.buildServer.serverSide.oauth.OAuthConnectionsManager;
 import jetbrains.buildServer.users.User;
@@ -32,7 +34,7 @@ import jetbrains.buildServer.web.openapi.WebControllerManager;
 import jetbrains.buildServer.web.util.SessionUser;
 import jetbrains.buildServer.web.util.WebUtil;
 import octopus.teamcity.server.OctopusGenericRunType;
-import octopus.teamcity.server.connection.ConnectionHelper;
+import octopus.teamcity.server.connection.OctopusConnection;
 import octopus.teamcity.server.connection.OctopusConnectionsBean;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -74,12 +76,22 @@ public class OctopusEditGenericRunTypeController extends BaseController {
       return null;
     }
 
-    final Collection<OAuthConnectionDescriptor> availableConnections =
-        ConnectionHelper.getAvailableOctopusConnections(
-                oauthConnectionManager, projectManager, user)
-            .values();
-
-    modelAndView.addObject("octopusConnections", new OctopusConnectionsBean(availableConnections));
+    // "contextProject" is a bit magic, unable to find docs
+    final SecuredProject project = (SecuredProject) request.getAttribute("contextProject");
+    if (project == null) {
+      modelAndView.addObject(
+          "parameterCollectionFailure",
+          "Unable to identify containing project from request - "
+              + "please contact Octopus Deploy support");
+      modelAndView.addObject(
+          "octopusConnections", new OctopusConnectionsBean(Collections.emptyList()));
+    } else {
+      modelAndView.addObject("parameterCollectionFailure", "");
+      final Collection<OAuthConnectionDescriptor> availableConnections =
+          oauthConnectionManager.getAvailableConnectionsOfType(project, OctopusConnection.TYPE);
+      modelAndView.addObject(
+          "octopusConnections", new OctopusConnectionsBean(availableConnections));
+    }
     modelAndView.addObject("user", user);
     modelAndView.addObject("rootUrl", WebUtil.getRootUrl(request));
     modelAndView.addObject("rootProject", projectManager.getRootProject());
