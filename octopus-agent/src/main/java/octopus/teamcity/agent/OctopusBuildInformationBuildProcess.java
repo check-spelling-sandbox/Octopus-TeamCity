@@ -82,6 +82,14 @@ public class OctopusBuildInformationBuildProcess extends OctopusBuildProcess {
               teamCityServerUrl, build.getAccessUser(), build.getAccessCode());
       final Build restfulBuild = teamCityServer.build(new BuildId(buildIdString));
 
+      final String buildNumber = restfulBuild.getBuildNumber();
+      String buildUrlString = sharedConfigParameters.get("externalBuildUrl");
+      if (buildUrlString == null) {
+        // if the Global settings don't have a Server URL then fall back to using the agent's
+        // configuration for the server's URL
+        buildUrlString = teamCityServerUrl + "/viewLog.html?buildId=" + buildNumber;
+      }
+
       final OctopusBuildInformation buildInformation =
           builder.build(
               sharedConfigParameters.get("octopus_vcstype"),
@@ -89,9 +97,8 @@ public class OctopusBuildInformationBuildProcess extends OctopusBuildProcess {
               sharedConfigParameters.get("build.vcs.number"),
               restfulBuild.getBranch().getName(),
               createJsonCommitHistory(restfulBuild),
-              teamCityServerUrl,
-              buildIdString,
-              build.getBuildNumber());
+              buildUrlString,
+              buildNumber);
 
       if (verboseLogging) {
         buildLogger.message("Creating " + dataFile);
