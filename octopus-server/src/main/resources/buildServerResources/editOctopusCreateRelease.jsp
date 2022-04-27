@@ -116,7 +116,7 @@
         <props:textProperty name="${keys.gitRefKey}" className="longField"/>
         <span class="error" id="error_${keys.gitRefKey}"></span>
         <span class="smallNote">The git reference to use when creating the release, e.g. branch name or tag.</span>
-        <span class="smallNote">Ignored for non-version controlled projects.</span>
+        <span class="smallNote">Leave blank for projects that are not in Git.</span>
     </td>
 </tr>
     <tr id="gitCommitRow">
@@ -125,7 +125,7 @@
             <props:textProperty name="${keys.gitCommitKey}" className="longField"/>
             <span class="error" id="error_${keys.gitCommitKey}"></span>
             <span class="smallNote">The git commit to use when creating the release.</span>
-            <span class="smallNote">Ignored for non-version controlled projects.</span>
+            <span class="smallNote">Leave blank for projects that are not in Git.</span>
         </td>
     </tr>
 </l:settingsGroup>
