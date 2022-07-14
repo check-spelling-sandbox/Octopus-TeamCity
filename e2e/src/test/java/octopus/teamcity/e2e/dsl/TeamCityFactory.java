@@ -90,7 +90,7 @@ public class TeamCityFactory {
 
   private GenericContainer<?> createAndStartServer() {
     final GenericContainer<?> teamCityServer =
-        new GenericContainer<>(DockerImageName.parse("jetbrains/teamcity-server"))
+        new GenericContainer<>(DockerImageName.parse("jetbrains/teamcity-server:2021.2.3"))
             .withExposedPorts(8111)
             .waitingFor(Wait.forLogMessage(".*Super user authentication token.*", 1))
             .withNetwork(dockerNetwork)
@@ -111,7 +111,7 @@ public class TeamCityFactory {
 
   private GenericContainer<?> createAndStartAgent() {
     final GenericContainer<?> teamCityAgent =
-        new GenericContainer<>(DockerImageName.parse("jetbrains/teamcity-agent"))
+        new GenericContainer<>(DockerImageName.parse("jetbrains/teamcity-agent:2021.2.3"))
             .withNetwork(dockerNetwork)
             .withEnv("SERVER_URL", "http://server:8111")
             .waitingFor(Wait.forLogMessage(".*jetbrains.buildServer.AGENT - Agent name was.*", 1))
