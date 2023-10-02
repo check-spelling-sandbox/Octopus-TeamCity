@@ -69,7 +69,7 @@ public class FileSelector {
   }
 
   // Note on windows, cannot use globs when using Path.resolve (as * is an illegal character)
-  // this _should_ also be valid on linux, but it's slighly nasty
+  // this _should_ also be valid on linux, but it's slightly nasty
   public static String appendGlobToPath(final Path rootPath, final String glob) {
 
     final String systemSpecificGlob = FilenameUtils.separatorsToSystem(glob);
