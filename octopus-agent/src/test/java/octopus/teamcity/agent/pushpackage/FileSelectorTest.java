@@ -87,11 +87,11 @@ class FileSelectorTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"/", "\\"})
-  public void canMatchOnMultipleEntries(final String delimterUsedByUser) {
+  public void canMatchOnMultipleEntries(final String delimiterUsedByUser) {
     final Set<File> matchedFiles =
         new FileSelector(testPath)
             .getMatchingFiles(
-                Lists.newArrayList("*.zip", subDirectoryName + delimterUsedByUser + "*.zip"));
+                Lists.newArrayList("*.zip", subDirectoryName + delimiterUsedByUser + "*.zip"));
     final List<File> fullList = Lists.newArrayList(rootPathFiles);
     fullList.addAll(subDirectoryFiles);
     assertThat(matchedFiles).containsExactlyInAnyOrderElementsOf(fullList);
