@@ -43,7 +43,7 @@ You can then attach to the server/agent via the provided run-configurations, and
 plugin code when build steps are configured (on server) or executed (on agent).
 
 ## Build Server
-The TeamCity Plugin uses Github actions for all CI/CD/Release operations.
+The TeamCity Plugin uses GitHub actions for all CI/CD/Release operations.
 
 ## Updating the version of Octopus CLI we embed
 
