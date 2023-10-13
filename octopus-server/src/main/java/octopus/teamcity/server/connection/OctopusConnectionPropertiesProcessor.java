@@ -58,8 +58,7 @@ public class OctopusConnectionPropertiesProcessor implements PropertiesProcessor
         if (!octopusServerURL.getProtocol().equals("http")
             && !octopusServerURL.getProtocol().equals("https")) {
           return Optional.of(
-              new InvalidProperty(
-                  propertyId, "Server URL must specify specify http or https protocol"));
+              new InvalidProperty(propertyId, "Server URL must specify http or https protocol"));
         }
       } catch (final MalformedURLException e) {
         final String errorMsg = "Illegally formatted URL - " + e.getLocalizedMessage();
