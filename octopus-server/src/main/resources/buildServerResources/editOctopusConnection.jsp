@@ -48,7 +48,7 @@
 </l:settingsGroup>
 
 <l:settingsGroup title="Proxy">
-    <props:selectSectionProperty name="${keys.proxyRequiredPropertyName}" title="Proxy Server Requried" note="">
+    <props:selectSectionProperty name="${keys.proxyRequiredPropertyName}" title="Proxy Server Required" note="">
         <props:selectSectionPropertyContent value="false" caption="<No Proxy Required>"/>
         <props:selectSectionPropertyContent value="true" caption="Use Proxy Server">
             <jsp:include page="${teamcityPluginResourcesPath}/v2/subpages/editProxyParameters.jsp"/>
