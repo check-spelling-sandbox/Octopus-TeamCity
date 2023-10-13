@@ -41,7 +41,7 @@ public class OctopusOsUtils {
           return true;
         } else {
           LOGGER.info(
-              String.format("Octopus can not run on agent with %s and without octo or DotNET", os));
+              String.format("Octopus cannot run on agent with %s and without octo or DotNET", os));
           return false;
         }
       }
